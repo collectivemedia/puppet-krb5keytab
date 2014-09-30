@@ -15,65 +15,230 @@
 
 ## Overview
 
-A one-maybe-two sentence summary of what the module does/what problem it solves.
-This is your 30 second elevator pitch for your module. Consider including
-OS/Puppet version it works with.
+This module generates Kerberos keytabs for hosts (manages the /etc/krb5.keytab file) without
+the need to place a Kerberos administrator credential on the host.
+
+This module was developed for, and tested with, MIT Kerberos and OpenLDAP on CentOS 6.
 
 ## Module Description
 
-If applicable, this section should have a brief description of the technology
-the module integrates with and what that integration enables. This section
-should answer the questions: "What does this module *do*?" and "Why would I use
-it?"
+This module uses custom functions to create the principal and download the keytab
+on the puppet master, and hiera to store the generated keytabs. The design of this
+process eliminates the need to call exec{} with a Kerberos administrative credential
+on every host.
 
-If your module has a range of functionality (installation, configuration,
-management, etc.) this is the time to mention it.
+In addition, the module stores the generated keytab file in hiera, so that it is
+cached for the next run. Some Kerberos implementations (notably MIT) randomize the
+password each time the keytab is downloaded, so without this feature a new keytab
+would be generated for each Puppet run. The module is currently able to store the
+generated key into CouchDB. Support for file/directory hiera is planned. 
 
 ## Setup
 
 ### What krb5keytab affects
 
-* A list of files, packages, services, or operations that the module will alter,
-  impact, or execute on the system it's installed on.
-* This is a great place to stick any warnings.
-* Can be in list or paragraph form.
+The only file on the target system that is affected is /etc/krb5.keytab, which
+contains the host's Kerberos principal. This keytab is used to authenticate the
+host itself to network services - for example, sssd uses this keytab to
+authenticate the host to the LDAP server.
 
-### Setup Requirements **OPTIONAL**
+### Setup Requirements
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
+There are numerous assumptions and configuration parameters required to make full
+use of this module.
+
+#### Assumptions
+
+1. You need to have OpenLDAP and Kerberos running and working in your environment.
+
+2. You need to have at least one Kerberos administrative principal created, which has (at minimum)
+the ability to add principals, change passwords, inquire, and list ("clia" in kadm5.acl). We suggest
+creating a separate principal for your Puppet master, e.g.: `puppetmaster@YOUR-REALM.COM`
+
+You would place a corresponding entry in the `/var/kerberos/krb5kdc/kadm5.acl` file:
+
+`puppetmaster@YOUR-REALM.COM   clia`
+
+3. You need to have Hiera running. If you want to use the feature of this module that
+saves newly generated keytabs in hiera for you, then your Hiera must be backed by
+CouchDB (see https://github.com/crayfishx/hiera-http). We will be adding support for
+a file/directory based Hiera setup in the future.
 
 ### Beginning with krb5keytab
 
-The very basic steps needed for a user to get the module up and running.
-
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you may wish to include an additional section here: Upgrading
-(For an example, see http://forge.puppetlabs.com/puppetlabs/firewall).
+krb5keytab is configured with numerous parameters in Hiera. Please see the "Usage" section for details.
 
 ## Usage
 
-Put the classes, types, and resources for customizing, configuring, and doing
-the fancy stuff with your module here.
+### General Configuration Parameters
+
+Configuration for krb5keytab is stored in hiera. The following parameters are supported.
+
+#### krb5keytab::admin-keytab (required)
+
+The **base64 encoded** keytab for the administrative Kerberos principal.
+
+* How to create a keytab file: https://kb.iu.edu/d/aumh#create
+* How to base64 encode the keytab: `base64 username.keytab`
+
+Example:
+
+`VQPlowXZxtrKW8sZv3Ehg2T7W+y1jjxzILnOOHM/GHzykphIHXbvMmezZpupLB3wns8/YNPi4CVM
+YGe1rWmCZ7hU0SmEdJNQ9/x2nd2j7YudunhVHAsA8lvE32L0TY8VbpQX4d1y0YxaJeMDksE+M17N
+JVKiWeQD7o92guSzp1wapzCA08yZJXZV36Uw21U87NgZPhdbhDE/kzeFep5hrxEIXylaQW8zRCGc
+LT/l8RjPCFkjXzxn3VKWsaVaaFC2FCDaEMqkFcxcX5UxatnBqcNtlbR0WTNUiAYu9UDdEz1KVGZc
+L5Vxbj3dSmsMm8M2peSSoOl3FgSTUFyqJ9xoiOIPbrJz6MkId1oTW31Lal0hmqTAxZLmYCLNEb6y
+yB9J5APTNEW1SPKma7rXmmOQtWZuthYsasWRbFdZKsC96h6jVHzX/pngAhxPBPjEyYUkNBeFSO9W
+KIpn3f0KXiFt0+i/Y6N5ZmsODf6fzKUFMW24HogjzleqqhUYEiNdpmZKj5f3iP0Lg2PZpmNFeTzO
+2tw6VebNZTCc9REw98sh8L4D0OAF5ProTItJNditAg==
+`
+
+#### krb5keytab::admin-principal (required)
+
+The principal's name of your administrative Kerberos principal.
+
+Example:
+
+`puppetmaster@YOUR-REALM.COM`
+
+#### krb5keytab::krb5-realm (required)
+
+The kerberos realm. In other words, the (usually capitalized) portion of principal
+names that come after the "@" sign. This is often part of your domain name.
+
+Example:
+
+`YOUR-REALM.COM`
+
+#### krb5keytab::hiera-backend (optional)
+
+The type of Hiera backend you run, so that the module can write keytabs that are
+generated into that Hiera backend for you. The options available are:
+
+* `none` (or undefined) -- Do not store generated keytabs in Hiera
+* `file` -- Store generated keytabs into a directory structure
+* `couchdb` -- Store generated keytabs into a CouchDB
+
+Note that if you select `none` or undefined, the code to generate a keytab will be
+executed each time a Puppet catalog is compiled for a node. On MIT Kerberos, this
+will result in randomization of the keytab for the host every time. This is probably
+undesirable.
+
+#### krb5keytab::ldap-ou (required)
+
+The place in your LDAP tree where Kerberos principals for hosts should be created.
+
+Example:
+
+`ou=hosts,dc=your-realm,dc=com`
+
+#### krb5keytab::krb5-admin-server (required)
+
+The fully qualified domain name of your Kerberos admin server. This is that server that
+will be contacted to identify, list, create, and obtain the host principals.
+
+Example:
+
+`kerberos1.your-realm.com`
+
+### Files Hiera Configuration Parameters
+
+The following settings are supported if you set `krb5keytab::hiera-backend` = `files`
+
+#### krb5keytab::hiera-file-dir (required)
+
+The directory where files are created with the host keytabs (this must exist on the Puppet master).
+Within this directory, files named `${::fqdn}.yaml` will be created. Each file will have a field named
+"krb5-keytab" with the BASE64 encoded keytab.
+
+Please use a separate subdirectory for this from all of your other Hiera data. 
+
+### CouchDB Hiera Configuration Parameters
+
+The following settings are supported if you set `krb5keytab::hiera-backend` = `couchdb`.
+
+The 'couchrest' gem is required for krb5keytab to write to a CouchDB.
+
+#### krb5keytab::hiera-couchdb-hostname (optional)
+
+The fully qualified domain name or IP address of your CouchDB server. Defaults to 127.0.0.1.
+
+#### krb5keytab::hiera-couchdb-port (optional)
+
+The port number that CouchDB is running on. Defaults to 5984.
+
+#### krb5keytab::hiera-couchdb-database (optional)
+
+The database name in which to store generated keytabs. Defaults to "keytabs".
+
+Note: Within that database, a document named after ${::fqdn} will be generated, and therein a field named "krb5-keytab" will be created and populated with the BASE64 encoded kerberos keytab.
+
+#### krb5keytab::hiera-couchdb-username and krb5keytab::hiera-couchdb-password
+
+If CouchDB has basic authentication turned on, supply the username and password to connect. This account must have the ability to create and update records in the assigned database.
 
 ## Reference
 
-Here, list the classes, types, providers, facts, etc contained in your module.
-This section should include all of the under-the-hood workings of your module so
-people know what the module is touching on their system but don't need to mess
-with things. (We are working on automating this section!)
+### Classes
+
+#### krb5keytab::host_keytab
+
+Main class to generate and install a host keytab.
+
+This class does not take parameters. The connection and credential parameters for Kerberos are stored in Hiera. The keytab is generated for `${::fqdn}`.
+
+### Custom Functions
+
+#### krb5keytab_generatekt(options_hash)
+
+options_hash is a hash containing the following keys:
+
+* admin_principal - Name of the administrative principal. See krb5keytab::admin-principal hiera parameter.
+* admin_keytab - The **full path** to a file containing the administrative keytab.
+* ldap_ou - See krb5keytab::ldap-ou hiera parameter.
+* admin_server - See krb5keytab::krb5-admin-server hiera parameter.
+* realm - See krb5keytab::krb5-realm hiera parameter.
+* fqdn - FQDN of the host whose principal is needed.
+
+From this a host principal is built: `"host/#{args['fqdn']}@#{args['realm']}"`
+
+The "kadmin" command is used to create the principal if needed, and then to retrieve the keytab.
+
+This method returns the content of the keytab (which is binary data).
+
+#### krb5keytab_saveinhiera(options_hash)
+
+options_hash is a hash containing the following keys:
+
+* hiera_key - Name of the key to create in Hiera (in our context, "krb5-keytab")
+* fqdn - FQDN of the host whose principal is needed.
+* hiera_backend - One of 'none', 'files', or 'couchdb'
+* hiera_value - Value to write in Hiera (in our context, the BASE64 encoded keytab)
+
+No return value.
+
+#### krb5keytab_writefile(content)
+
+Creates a temporary file with the content supplied as the argument.
+
+Returns the path to the temporary file.
 
 ## Limitations
 
-This is where you list OS compatibility, version compatibility, etc.
+This module was developed on CentOS 6 for OpenLDAP and Kerberos. While we believe that
+the underlying code will probably work with other flavors of Linux and other
+implementations of LDAP and Kerberos, this has not been tested.
 
 ## Development
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
+If you wish to contribute, please submit a pull request. All contributions must be
+licensed to us under the Apache 2.0 license.
 
-## Release Notes/Contributors/Etc **Optional**
+## Contributors
 
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You may also add any additional sections you feel are
-necessary or important to include here. Please use the `## ` header.
+This module was originally developed at Collective, Inc. (http://www.collective.com)
+by Kevin Paulisse. We gratefully acknowledge the following contributors:
+
+* Kevin Paulisse
+* Sarguru Nathan
+* Millie Kim
