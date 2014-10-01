@@ -1,5 +1,7 @@
 # krb5keytab
 
+[![Build Status](https://travis-ci.org/collectivemedia/puppet-krb5keytab.svg?branch=master)](https://travis-ci.org/collectivemedia/puppet-krb5keytab)
+
 #### Table of Contents
 
 1. [Overview](#overview)
