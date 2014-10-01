@@ -53,12 +53,12 @@ use of this module.
 
 2. You need to have at least one Kerberos administrative principal created, which has (at minimum)
 the ability to add principals, change passwords, inquire, and list ("clia" in kadm5.acl). We suggest
-creating a separate principal for your Puppet master, e.g.: `puppetmaster@YOUR-REALM.COM`
-
-You would place a corresponding entry in the `/var/kerberos/krb5kdc/kadm5.acl` file:
-
-`puppetmaster@YOUR-REALM.COM   clia`
-
+creating a separate principal used only for your Puppet master, e.g.: `puppetmaster@YOUR-REALM.COM`  
+  
+   You would place a corresponding entry in the `/var/kerberos/krb5kdc/kadm5.acl` file to grant the privileges:  
+  
+   `puppetmaster@YOUR-REALM.COM   clia`  
+  
 3. You need to have Hiera running. If you want to use the feature of this module that
 saves newly generated keytabs in hiera for you, then your Hiera must be backed by
 CouchDB (see https://github.com/crayfishx/hiera-http). We will be adding support for
