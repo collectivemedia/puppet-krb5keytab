@@ -62,10 +62,10 @@ class krb5keytab::host_keytab inherits krb5keytab {
 
   $h_keytab = hiera('krb5-keytab', '*undefined*')
   if ($h_keytab == '*undefined*') {
-  
-  	# Store the keytab contents in a file on the server and pass in the
-  	# argument as a filename. Otherwise if there's an error the puppet agent might
-  	# be able to see the key in the error message, and that would be bad!
+
+    # Store the keytab contents in a file on the server and pass in the
+    # argument as a filename. Otherwise if there's an error the puppet agent might
+    # be able to see the key in the error message, and that would be bad!
 
     $admin_keytab_file_path = krb5keytab_writefile(base64('decode',$admin_keytab))
 
