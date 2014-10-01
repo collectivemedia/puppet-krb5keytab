@@ -16,3 +16,12 @@ task :validate do
     sh "erb -P -x -T '-' #{template} | ruby -c"
   end
 end
+desc "download and set required modules and files on spec/fixtures"
+task :fixtures do
+  sh "puppet module install puppetlabs-stdlib --modulepath=./spec/fixtures/modules"
+  sh "mkdir -p ./spec/fixtures/modules/krb5keytab"
+  sh "cd ./spec/fixtures/modules/krb5keytab &&  ln -s ../../../../manifests ./manifests"
+end
+task :clean_fixtures do
+  sh "rm -rvf ./spec/fixtures/*"
+end

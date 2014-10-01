@@ -14,6 +14,17 @@
 #
 # -------------------------------------------------------
 #
-class krb5keytab {
-  class { 'krb5keytab::host_keytab': }
+class krb5keytab (
+$admin_keytab = hiera('krb5keytab::admin-keytab', '*undefined*'),
+$admin_princ = hiera('krb5keytab::admin-principal', '*undefined*'),
+$krb5_realm = hiera('krb5keytab::krb5-realm', '*undefined*'),
+$hiera_backend = hiera('krb5keytab::hiera-backend', '*undefined*'),
+$krb5_admin_server = hiera('krb5keytab::krb5-admin-server', '*undefined*'),
+$ldap_ou = hiera('krb5keytab::ldap-ou', '*undefined*'),
+$krb5_admin_server = hiera('krb5keytab::krb5-admin-server', '*undefined*'),
+$h_keytab = hiera('krb5-keytab', '*undefined*')
+){
+
+  class { 'krb5keytab::host_keytab': } ->
+  Class['krb5keytab']
 }
