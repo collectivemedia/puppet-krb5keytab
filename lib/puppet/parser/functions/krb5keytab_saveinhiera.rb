@@ -30,12 +30,34 @@ module Puppet::Parser::Functions
     
     # Hand off to the appropriate handler
     backend = nil
-    ## backend = HieraBackendHandler_File.new() if args['hiera_backend'] == 'file'
+    backend = HieraBackendHandler_File.new() if args['hiera_backend'] == 'file'
     backend = HieraBackendHandler_CouchDB.new() if args['hiera_backend'] == 'couchdb'
-    fail "Unrecognized or unhandled hiera backend handler: #{args['hiera_backend']}" if backend.nil?
+    return false if backend.nil?
     
     return backend.save(args)
     
+  end
+
+  class HieraBackendHandler_File
+
+    def save (args)
+
+      fail "Required option hiera_file_dir is not defined" if args['hiera_file_dir'].empty?
+      fail "Directory #{args['hiera_file_dir']} does not exist" if ! File.directory?(args['hiera_file_dir'])
+      keytab = args['hiera_value']
+      keytab.gsub!(/\n/,'')
+      begin
+        fqdn = args['fqdn']	
+        filename = "#{args['hiera_file_dir']}/#{fqdn}.yaml"
+        file = File.open(filename, "w")
+        file.write("krb5-keytab: " + keytab)
+        file.close
+      rescue => e
+        fail "Failed to save keytab into hiera data directory: #{e}"
+      end
+
+    end
+
   end
   
   ########
