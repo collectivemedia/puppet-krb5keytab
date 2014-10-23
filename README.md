@@ -168,9 +168,9 @@ Example:
 
 ### Files Hiera Configuration Parameters
 
-The following settings are supported if you set `krb5keytab::hiera-backend` = `files`
+The following settings are supported if you set `krb5keytab::hiera-backend` = `file`
 
-#### Hiera File Directory (required if hiera-backend = files)
+#### Hiera File Directory (required if hiera-backend = file)
 
 Hiera: `krb5keytab::hiera-file-dir`
 
