@@ -1,6 +1,6 @@
 {
   "name": "collectivemedia-krb5keytab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "collectivemedia",
   "summary": "Generates and manages Kerberos host keytabs",
   "license": "Apache 2.0",
