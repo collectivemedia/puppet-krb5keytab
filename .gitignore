@@ -5,3 +5,8 @@ spec/fixtures/
 .vagrant/
 .bundle/
 coverage/
+# Eclipse stuff
+.ptp-sync-folder
+.project
+.ptp-sync
+.settings
