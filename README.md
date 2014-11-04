@@ -214,12 +214,12 @@ The *name* of the resource should be the name of the principal.
 
 The following parameters are generally useful for this class.
 
-* keytab - Keytab file to write -- use `/etc/krb5.keytab` for the host keytab. This defaults to NULL (i.e. do NOT write a keytab file); this is useful behavior if you want to declare that a particular principal exists, but not store its keytab somewhere (Cloudera Manager does this for example).
+* keytab - Keytab file to write -- use `/etc/krb5.keytab` for the host keytab. This defaults to NULL (i.e. do NOT write a keytab file); this is useful behavior if you want to declare that a particular principal exists, but not store its keytab somewhere (Cloudera Manager, for example, requires that a principal exist, but it will pull the keytab itself). If you really want to specify this "NULL" behavior explicitly, pass `keytab => 'none'`.
 * keytab_owner - Owner of keytab file -- defaults to root
 * keytab_group - Group of keytab file -- defaults to root
 * keytab_mode - Mode (permissions) of keytab file -- defaults to 0400
 * ldap_ou - See krb5keytab::ldap-ou hiera parameter.
-* hiera_key - Name of the key to create in Hiera -- defaults to 'krb5-keytab' for host keytabs, and the base64-encoded value of *principal* for non-host keytabs.
+* hiera_key - Name of the key to create in Hiera -- defaults to 'krb5-keytab' for host keytabs, and the name of the *principal* for non-host keytabs. (Certain characters in the name of the principal will be replaced with underscores to avoid breaking YAML.)
 
 #### krb5keytab::host_keytab (DEPRECATED)
 
