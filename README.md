@@ -206,15 +206,26 @@ If CouchDB has basic authentication turned on, supply the username and password 
 
 This is a **define** that can be used to create keytabs for arbitrary principals, including host principals. You should be using this, as opposed to the old `host_keytab` class.
 
+A typical define may look like this:
+
+```
+krb5keytab::keytab { "ldap/${::fqdn}":
+    keytab       => '/etc/openldap/krb5.keytab',
+    keytab_owner => 'root',
+    keytab_group => 'ldap',
+    keytab_mode  => '0640',
+}
+```
+
 The *name* of the resource should be the name of the principal.
 
 * For a host keytab, this is: `"host/${::fqdn}@YOUR-KERBEROS-REALM.COM"`
-* You need to specify the full name of the principal, including the realm name (e.g. `some-dude/hostname.yourdomain.com@YOUR-REALM.COM`)
+* You need to specify the full name of the principal, including the realm name (e.g. `some-dude/hostname.yourdomain.com@YOUR-REALM.COM`). If the principal does not have a `@` in it, the default kerberos realm will be added -- i.e., `some-dude/hostname.yourdomain.com` will become `some-dude/hostname.yourdomain.com@YOUR-REALM.COM` automatically.
 * When specifying the principal you can use `${::facter_fact_name}` which will be replaced by the appropriate facter fact. `${::fqdn}` is likely to be particularly useful.
 
 The following parameters are generally useful for this class.
 
-* keytab - Keytab file to write -- use `/etc/krb5.keytab` for the host keytab. This defaults to NULL (i.e. do NOT write a keytab file); this is useful behavior if you want to declare that a particular principal exists, but not store its keytab somewhere (Cloudera Manager, for example, requires that a principal exist, but it will pull the keytab itself). If you really want to specify this "NULL" behavior explicitly, pass `keytab => 'none'`.
+* keytab - Keytab file to write -- use `/etc/krb5.keytab` for the host keytab. This defaults to NULL (i.e. do NOT write a keytab file) if the principal is not the host principal. This is useful behavior if you want to declare that a particular principal exists, but not store its keytab somewhere (Cloudera Manager, for example, requires that a principal exist, but it will pull the keytab itself). If you really want to specify this "NULL" behavior and don't trust the omission of the "keytab" parameter, you can pass `keytab => 'none'` to be extra sure.
 * keytab_owner - Owner of keytab file -- defaults to root
 * keytab_group - Group of keytab file -- defaults to root
 * keytab_mode - Mode (permissions) of keytab file -- defaults to 0400
