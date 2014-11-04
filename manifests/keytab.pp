@@ -38,27 +38,27 @@ define krb5keytab::keytab (
   #
   
   if ($admin_keytab == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::admin-keytab' (base64 encoded kerberos admin credential) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::admin-keytab\' (base64 encoded kerberos admin credential) is not defined in hiera'
   }
 
   if ($admin_princ == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::admin-principal' (name of the kerberos admin principal) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::admin-principal\' (name of the kerberos admin principal) is not defined in hiera'
   }
 
   if ($krb5_realm == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::krb5-realm' (Kerberos realm) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::krb5-realm\' (Kerberos realm) is not defined in hiera'
   }
 
   if ($hiera_backend == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::hiera-backend' (name of backend script to run) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::hiera-backend\' (name of backend script to run) is not defined in hiera'
   }
 
   if ($ldap_ou == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::ldap-ou' (where to put host keys in LDAP) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::ldap-ou\' (where to put host keys in LDAP) is not defined in hiera'
   }
 
   if ($krb5_admin_server == '*undefined*') {
-    fail "Missing parameter 'krb5keytab::krb5-admin-server' (FQDN and optionally port of kerberos admin server) is not defined in hiera"
+    fail 'Missing parameter \'krb5keytab::krb5-admin-server\' (FQDN and optionally port of kerberos admin server) is not defined in hiera'
   }
   
   #
@@ -121,11 +121,7 @@ define krb5keytab::keytab (
 	      hiera_couchdb_username => hiera('krb5keytab::hiera-couchdb-username', ''),
 	      hiera_couchdb_password => hiera('krb5keytab::hiera-couchdb-password', ''),
 	    } )
-      
-      
-      
-      
-      
+
     } else {
 	    ## Don't break with some legacy encoding from earlier versions
 	    $keytab_content_repl = regsubst($keytab_in_hiera, '^BASE64:<(.+)>$', '\1', 'M')
@@ -141,7 +137,7 @@ define krb5keytab::keytab (
   # Apply the keytab
   #
   
-  if ($keytab != '*null*') {
+  if ($keytab != '*null*' and $keytab != 'none') {
 	  file { $keytab:
 	      path    => $keytab,
 	      owner   => $keytab_owner,
