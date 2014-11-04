@@ -48,14 +48,14 @@ module Puppet::Parser::Functions
       keytab = args['hiera_value']
       keytab.gsub!(/\n/,'')
       begin
-        fqdn = args['fqdn']	
+        fqdn = args['fqdn']
         filename = "#{args['hiera_file_dir']}/#{fqdn}.yaml"
         File.open(filename, File::RDWR|File::CREAT, 0644) { |f|
           f.flock(File::LOCK_EX)
           out = Array.new
           content = f.read.gsub(/[\r\n]+/, "\n")
           content.each_line do |line|
-            next if line[0, args['hiera_key']+1] == args['hiera_key'] + ':'
+            next if line[0, args['hiera_key'].length+1] == args['hiera_key'] + ':'
             out << content
           end
           out << "#{args['hiera_key']}: #{keytab}\n"
