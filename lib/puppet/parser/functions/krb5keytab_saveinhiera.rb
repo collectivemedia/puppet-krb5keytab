@@ -60,7 +60,7 @@ module Puppet::Parser::Functions
           end
           out << "#{args['hiera_key']}: #{keytab}\n"
           f.rewind
-          f.write(out)
+          f.write(out.join("\n"))
           f.flush
           f.truncate(f.pos)
         }
