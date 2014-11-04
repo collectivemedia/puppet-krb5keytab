@@ -121,6 +121,8 @@ define krb5keytab::keytab (
         hiera_couchdb_username => hiera('krb5keytab::hiera-couchdb-username', ''),
         hiera_couchdb_password => hiera('krb5keytab::hiera-couchdb-password', ''),
       } )
+      
+      $keytab_content = $keytab_from_generatekt
 
     } else {
       ## Don't break with some legacy encoding from earlier versions
