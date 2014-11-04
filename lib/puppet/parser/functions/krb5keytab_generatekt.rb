@@ -23,7 +23,7 @@ module Puppet::Parser::Functions
     # Validate arguments
     args = args_in[0]
     fail "Usage: krb5keytab_generatekt(options_hash) -- #{args.inspect}" if ! args.is_a?(Hash)
-    req_keys = %w{admin_keytab admin_principal realm ldap_ou admin_server fqdn}
+    req_keys = %w{admin_keytab admin_principal realm ldap_ou admin_server}
     req_keys.each do |key|
       fail "Required option key #{key} was not defined" if ! args.key?(key)
     end
@@ -37,9 +37,16 @@ module Puppet::Parser::Functions
       args['realm']
     )
     
-    # Check to see if the host principal exists now
+    # Check to see if the principal exists now
     # Create it if it doesn't
-    hostprinc = "host/#{args['fqdn']}@#{args['realm']}" 
+    hostprinc = nil
+    if (args.key?('principal'))
+      hostprinc = args['principal']
+      hostprinc += "@#{args['realm']}" if hostprinc !~ /@/
+    else  
+      fail "Required option 'fqdn' was not defined" if ! args.key?('fqdn')
+      hostprinc = "host/#{args['fqdn']}@#{args['realm']}"
+    end
     princ = kadmin.getprinc(hostprinc)
     if princ.nil?
       success = kadmin.createprinc(hostprinc)
