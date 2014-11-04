@@ -39,18 +39,18 @@ module Puppet::Parser::Functions
     
     # Check to see if the principal exists now
     # Create it if it doesn't
-    hostprinc = nil
+    the_principal = nil
     if (args.key?('principal'))
-      hostprinc = args['principal']
-      hostprinc += "@#{args['realm']}" if hostprinc !~ /@/
+      the_principal = args['principal']
+      the_principal += "@#{args['realm']}" if the_principal !~ /@/
     else  
       fail "Required option 'fqdn' was not defined" if ! args.key?('fqdn')
-      hostprinc = "host/#{args['fqdn']}@#{args['realm']}"
+      the_principal = "host/#{args['fqdn']}@#{args['realm']}"
     end
-    princ = kadmin.getprinc(hostprinc)
+    princ = kadmin.getprinc(the_principal)
     if princ.nil?
-      success = kadmin.createprinc(hostprinc)
-      fail "Unable to create #{hostprinc}!" if ! success
+      success = kadmin.createprinc(the_principal)
+      fail "Unable to create #{the_principal}!" if ! success
     end
     
     # Grab the keytab
@@ -59,8 +59,8 @@ module Puppet::Parser::Functions
     tmpfile.close
     tmpfile.unlink
     begin
-      success = kadmin.addkeytab(hostprinc, path)
-      fail "Unable to create #{path} with key for #{hostprinc}!" if ! success
+      success = kadmin.addkeytab(the_principal, path)
+      fail "Unable to create #{path} with key for #{the_principal}!" if ! success
       f = File.open(path, "rb")
       f.binmode
       content = f.read
