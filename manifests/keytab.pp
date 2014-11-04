@@ -137,7 +137,7 @@ define krb5keytab::keytab (
   # Apply the keytab
   #
   
-  if ($keytab != '*null*' and $keytab != 'none') {
+  if ($keytab != '*null*') and ($keytab != 'none') {
 	  file { $keytab:
 	      path    => $keytab,
 	      owner   => $keytab_owner,
