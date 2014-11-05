@@ -23,7 +23,7 @@ module Puppet::Parser::Functions
     # Validate arguments
     args = args_in[0]
     fail "Usage: krb5keytab_generatekt(options_hash) -- #{args.inspect}" if ! args.is_a?(Hash)
-    req_keys = %w{admin_keytab admin_principal realm ldap_ou admin_server fqdn}
+    req_keys = %w{admin_keytab admin_principal realm ldap_ou admin_server}
     req_keys.each do |key|
       fail "Required option key #{key} was not defined" if ! args.key?(key)
     end
@@ -37,13 +37,20 @@ module Puppet::Parser::Functions
       args['realm']
     )
     
-    # Check to see if the host principal exists now
+    # Check to see if the principal exists now
     # Create it if it doesn't
-    hostprinc = "host/#{args['fqdn']}@#{args['realm']}" 
-    princ = kadmin.getprinc(hostprinc)
+    the_principal = nil
+    if (args.key?('principal'))
+      the_principal = args['principal']
+      the_principal += "@#{args['realm']}" if the_principal !~ /@/
+    else  
+      fail "Required option 'fqdn' was not defined" if ! args.key?('fqdn')
+      the_principal = "host/#{args['fqdn']}@#{args['realm']}"
+    end
+    princ = kadmin.getprinc(the_principal)
     if princ.nil?
-      success = kadmin.createprinc(hostprinc)
-      fail "Unable to create #{hostprinc}!" if ! success
+      success = kadmin.createprinc(the_principal)
+      fail "Unable to create #{the_principal}!" if ! success
     end
     
     # Grab the keytab
@@ -52,8 +59,8 @@ module Puppet::Parser::Functions
     tmpfile.close
     tmpfile.unlink
     begin
-      success = kadmin.addkeytab(hostprinc, path)
-      fail "Unable to create #{path} with key for #{hostprinc}!" if ! success
+      success = kadmin.addkeytab(the_principal, path)
+      fail "Unable to create #{path} with key for #{the_principal}!" if ! success
       f = File.open(path, "rb")
       f.binmode
       content = f.read

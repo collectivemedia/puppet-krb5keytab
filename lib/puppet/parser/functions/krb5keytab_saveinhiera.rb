@@ -44,14 +44,26 @@ module Puppet::Parser::Functions
 
       fail "Required option hiera_file_dir is not defined" if args['hiera_file_dir'].empty?
       fail "Directory #{args['hiera_file_dir']} does not exist" if ! File.directory?(args['hiera_file_dir'])
+      args['hiera_key'] = 'krb5-keytab' if ! args.key?('hiera_key')
       keytab = args['hiera_value']
       keytab.gsub!(/\n/,'')
       begin
-        fqdn = args['fqdn']	
+        fqdn = args['fqdn']
         filename = "#{args['hiera_file_dir']}/#{fqdn}.yaml"
-        file = File.open(filename, "w")
-        file.write("krb5-keytab: " + keytab)
-        file.close
+        File.open(filename, File::RDWR|File::CREAT, 0644) { |f|
+          f.flock(File::LOCK_EX)
+          out = Array.new
+          content = f.read.gsub(/[\r\n]+/, "\n")
+          content.each_line do |line|
+            next if line[0, args['hiera_key'].length+1] == args['hiera_key'] + ':'
+            out << content
+          end
+          out << "#{args['hiera_key']}: #{keytab}\n"
+          f.rewind
+          f.write(out.join("\n"))
+          f.flush
+          f.truncate(f.pos)
+        }
       rescue => e
         fail "Failed to save keytab into hiera data directory: #{e}"
       end
