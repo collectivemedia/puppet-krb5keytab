@@ -1,14 +1,20 @@
 {
   "name": "collectivemedia-krb5keytab",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "collectivemedia",
   "summary": "Generates and manages Kerberos host keytabs",
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
   "source": "https://github.com/collectivemedia/puppet-krb5keytab",
   "issues_url": "https://github.com/collectivemedia/puppet-krb5keytab/issues",
   "project_page": "https://github.com/collectivemedia/puppet-krb5keytab",
+  "operatingsystem_support": [
+    {
+      "operatingsystem":"CentOS",
+      "operatingsystemrelease": ["6.0"]
+    }
+  ], 
   "dependencies": [
-    {"version_requirement":">= 1.0.0","name":"puppetlabs-stdlib"}
+    {"version_requirement":">= 1.0.0","name":"puppetlabs/stdlib"}
   ]
 }
 
